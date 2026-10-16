@@ -1,51 +1,82 @@
 
 import streamlit as st
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
-# ---- Model setup (runs once per session, not every rerun) ----
+# ---- Model setup (runs once per session) ----
 if "model" not in st.session_state:
     st.session_state.model = ChatGoogleGenerativeAI(
         model="gemini-3.1-flash-lite",
         temperature=0.7
     )
 
-# ---- Memory (Streamlit reruns the whole script every time you type,
-# so session_state is what keeps your messages list alive) ----
+# ---- Chat memory ----
 if "messages" not in st.session_state:
     st.session_state.messages = [
         SystemMessage(content="You're a sexy and Funny AI Agent.")
     ]
 
+# ---- App title ----
 st.title("ChatDynast")
 st.caption("Founded by Shahriar Shoaib")
 
-# ---- Show past messages (skip SystemMessage, user doesn't need to see it) ----
+# ---- Display conversation history ----
 for msg in st.session_state.messages:
     if isinstance(msg, HumanMessage):
         st.chat_message("user").write(msg.content)
+
     elif isinstance(msg, AIMessage):
         st.chat_message("assistant").write(msg.content)
 
-# ---- Chat input box (built-in Streamlit widget, sits at bottom) ----
+# ---- Chat input ----
 prompt = st.chat_input("Type your message...")
 
-def stream_chunks():
-    # model.stream() returns chunks one at a time instead of the full reply at once
-    for chunk in st.session_state.model.stream(st.session_state.messages):
-        # each chunk is same shape as before: [{"type": "text", "text": "..."}]
-        if chunk.content:
-            yield chunk.content[0]["text"]
 
+# ---- Stream Gemini response ----
+def stream_chunks():
+    for chunk in st.session_state.model.stream(
+        st.session_state.messages
+    ):
+        if isinstance(chunk.content, str):
+            if chunk.content:
+                yield chunk.content
+
+        elif isinstance(chunk.content, list):
+            for block in chunk.content:
+                if isinstance(block, dict):
+                    if block.get("type") == "text" and block.get("text"):
+                        yield block["text"]
+
+
+# ---- Handle user message ----
 if prompt:
-    st.session_state.messages.append(HumanMessage(content=prompt))
+    st.session_state.messages.append(
+        HumanMessage(content=prompt)
+    )
+
     st.chat_message("user").write(prompt)
 
     with st.chat_message("assistant"):
-        # write_stream prints each yielded piece live AND returns the full joined text
-        reply_text = st.write_stream(stream_chunks())
+        try:
+            reply_text = st.write_stream(stream_chunks())
 
-    st.session_state.messages.append(AIMessage(content=reply_text))
+            if reply_text:
+                st.session_state.messages.append(
+                    AIMessage(content=reply_text)
+                )
+            else:
+                st.warning("Gemini returned an empty response.")
+
+        except Exception:
+            # Remove the failed request from conversation memory
+            st.session_state.messages.pop()
+
+            st.error(
+                "Sorry, ChatDynast couldn't get a response from Gemini. "
+                "Please try again in a moment. If the problem continues, "
+                "check your API key, model availability, quota, and app logs."
+            )
