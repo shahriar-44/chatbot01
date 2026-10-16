@@ -13,7 +13,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Great+Vibes&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Poppins', sans-serif;
@@ -21,7 +21,15 @@ st.markdown(
 
     /* Dark gradient background */
     .stApp {
-        background: radial-gradient(circle at top, #1b1035 0%, #0b0b17 60%);
+        background: #12122a;
+        color: #ffffff;
+    }
+
+    /* Clear, bright text everywhere */
+    .stApp p, .stApp li, .stApp span, .stMarkdown {
+        color: #ffffff;
+        font-size: 1.05rem;
+        line-height: 1.6;
     }
 
     /* Hide default Streamlit chrome */
@@ -43,16 +51,13 @@ st.markdown(
     .dynast-founder {
         text-align: center;
         font-size: 1.1rem;
-        color: #a5a5c0;
+        color: #e5e7eb;
         margin-top: 0.2rem;
     }
     .dynast-founder .name {
-        font-family: 'Great Vibes', cursive;
-        font-size: 2rem;
-        background: linear-gradient(90deg, #fcd34d, #f59e0b, #fb7185);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 18px rgba(251, 191, 36, 0.35);
+        font-weight: 800;
+        font-size: 1.2rem;
+        color: #fcd34d;
         padding-left: 6px;
     }
 
@@ -67,12 +72,11 @@ st.markdown(
 
     /* Chat bubbles */
     [data-testid="stChatMessage"] {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 18px;
+        background: #1f1f3d;
+        border: 1px solid #3b3b6b;
+        border-radius: 14px;
         padding: 14px 16px;
         margin-bottom: 12px;
-        backdrop-filter: blur(6px);
     }
 
     /* Chat input */
