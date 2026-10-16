@@ -1,16 +1,15 @@
-
 import streamlit as st
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
 # ---- Model setup (runs once per session) ----
 if "model" not in st.session_state:
-    st.session_state.model = ChatGoogleGenerativeAI(
-        model="gemini-3.1-flash-lite",
+    st.session_state.model = ChatGroq(
+        model="openai/gpt-oss-120b",
         temperature=0.7
     )
 
@@ -36,7 +35,7 @@ for msg in st.session_state.messages:
 prompt = st.chat_input("Type your message...")
 
 
-# ---- Stream Gemini response ----
+# ---- Stream Groq response ----
 def stream_chunks():
     for chunk in st.session_state.model.stream(
         st.session_state.messages
@@ -69,14 +68,20 @@ if prompt:
                     AIMessage(content=reply_text)
                 )
             else:
-                st.warning("Gemini returned an empty response.")
+                st.warning("Groq returned an empty response.")
 
-        except Exception:
-            # Remove the failed request from conversation memory
-            st.session_state.messages.pop()
+        except Exception as e:
+            print(f"Groq error: {type(e).__name__}: {e}")
+
+            if (
+                st.session_state.messages
+                and isinstance(st.session_state.messages[-1], HumanMessage)
+                and st.session_state.messages[-1].content == prompt
+            ):
+                st.session_state.messages.pop()
 
             st.error(
-                "Sorry, ChatDynast couldn't get a response from Gemini. "
-                "Please try again in a moment. If the problem continues, "
-                "check your API key, model availability, quota, and app logs."
+                "Sorry, ChatDynast couldn't get a response from Groq. "
+                "Please try again. Check your API key, model availability, "
+                "rate limits, and app logs if the problem continues."
             )
