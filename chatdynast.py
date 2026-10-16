@@ -1,145 +1,103 @@
-
 import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
-# ---- Page configuration ----
+# ---- Page configuration (must be the first Streamlit command) ----
 st.set_page_config(
-    page_title="ChatDynast | AI Chat",
-    page_icon="✦",
+    page_title="ChatDynast",
+    page_icon="👑",
     layout="centered",
-    initial_sidebar_state="collapsed"
 )
 
-# ---- Custom design ----
-st.markdown("""
-<style>
-/* Main background */
-.stApp {
-    background: linear-gradient(145deg, #0b1020 0%, #11152b 55%, #17112c 100%);
-    color: #f1f5f9;
-}
+# ---- Custom styling ----
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Great+Vibes&display=swap');
 
-.block-container {
-    max-width: 850px;
-    padding-top: 2.5rem;
-    padding-bottom: 7rem;
-}
+    html, body, [class*="css"] {
+        font-family: 'Poppins', sans-serif;
+    }
 
-/* Header */
-.hero {
-    text-align: center;
-    padding: 25px 15px 30px;
-    margin-bottom: 28px;
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 24px;
-    background: linear-gradient(
-        135deg,
-        rgba(99, 102, 241, 0.14),
-        rgba(168, 85, 247, 0.09)
-    );
-    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.18);
-}
+    /* Dark gradient background */
+    .stApp {
+        background: radial-gradient(circle at top, #1b1035 0%, #0b0b17 60%);
+    }
 
-.logo {
-    font-size: 35px;
-    margin-bottom: 4px;
-}
+    /* Hide default Streamlit chrome */
+    #MainMenu, footer, header {visibility: hidden;}
 
-.hero h1 {
-    font-size: 42px;
-    font-weight: 800;
-    letter-spacing: -1.5px;
-    margin: 0;
-    background: linear-gradient(90deg, #a5b4fc, #c084fc, #67e8f9);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
+    /* Title */
+    .dynast-title {
+        text-align: center;
+        font-size: 3.2rem;
+        font-weight: 800;
+        margin-bottom: 0;
+        background: linear-gradient(90deg, #ff4ecd, #8b5cf6, #38bdf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 1px;
+    }
 
-.tagline {
-    color: #cbd5e1;
-    font-size: 15px;
-    margin-top: 10px;
-}
+    /* Founder name */
+    .dynast-founder {
+        text-align: center;
+        font-size: 1.1rem;
+        color: #a5a5c0;
+        margin-top: 0.2rem;
+    }
+    .dynast-founder .name {
+        font-family: 'Great Vibes', cursive;
+        font-size: 2rem;
+        background: linear-gradient(90deg, #fcd34d, #f59e0b, #fb7185);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 18px rgba(251, 191, 36, 0.35);
+        padding-left: 6px;
+    }
 
-.founder {
-    color: #94a3b8;
-    font-size: 12px;
-    margin-top: 15px;
-}
+    /* Divider line */
+    .dynast-divider {
+        height: 2px;
+        margin: 14px auto 22px auto;
+        width: 60%;
+        background: linear-gradient(90deg, transparent, #8b5cf6, transparent);
+        border-radius: 2px;
+    }
 
-.status {
-    display: inline-block;
-    margin-top: 16px;
-    padding: 6px 12px;
-    border-radius: 30px;
-    background: rgba(34, 197, 94, 0.10);
-    border: 1px solid rgba(34, 197, 94, 0.25);
-    color: #86efac;
-    font-size: 12px;
-}
+    /* Chat bubbles */
+    [data-testid="stChatMessage"] {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        backdrop-filter: blur(6px);
+    }
 
-/* Chat message containers */
-[data-testid="stChatMessage"] {
-    background: rgba(30, 41, 59, 0.62);
-    border: 1px solid rgba(148, 163, 184, 0.13);
-    border-radius: 18px;
-    padding: 14px 16px;
-    margin-bottom: 14px;
-    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.10);
-}
-
-/* Chat input */
-[data-testid="stChatInput"] {
-    border: 1px solid rgba(167, 139, 250, 0.4);
-    border-radius: 18px;
-    background: #151a30;
-    box-shadow: 0 0 22px rgba(139, 92, 246, 0.08);
-}
-
-[data-testid="stChatInput"] textarea {
-    color: #f8fafc !important;
-}
-
-/* Buttons */
-.stButton button {
-    border-radius: 12px;
-}
-
-/* Footer */
-.footer {
-    text-align: center;
-    color: #64748b;
-    font-size: 12px;
-    padding: 20px 0 5px;
-}
-
-/* Hide default decoration */
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header[data-testid="stHeader"] {
-    background: transparent;
-}
-</style>
-""", unsafe_allow_html=True)
+    /* Chat input */
+    [data-testid="stChatInput"] textarea {
+        border-radius: 14px;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ---- Header ----
-st.markdown("""
-<div class="hero">
-    <div class="logo">✦</div>
-    <h1>ChatDynast</h1>
-    <div class="tagline">A little intelligence. A lot of personality.</div>
-    <div class="status">● AI ASSISTANT ONLINE</div>
-    <div class="founder">Crafted with care by <b>Shahriar Shoaib</b></div>
-</div>
-""", unsafe_allow_html=True)
+st.markdown('<h1 class="dynast-title">👑 ChatDynast</h1>', unsafe_allow_html=True)
+st.markdown(
+    '<p class="dynast-founder">Founded by <span class="name">Shahriar Shoaib</span></p>',
+    unsafe_allow_html=True,
+)
+st.markdown('<div class="dynast-divider"></div>', unsafe_allow_html=True)
 
 # ---- Model setup ----
 if "model" not in st.session_state:
     st.session_state.model = ChatGroq(
         model="openai/gpt-oss-120b",
         temperature=0.7,
-        max_retries=2
+        max_retries=2,
     )
 
 # ---- Chat memory ----
@@ -150,35 +108,17 @@ if "messages" not in st.session_state:
         )
     ]
 
-# ---- Optional welcome section ----
-if not any(
-    isinstance(msg, HumanMessage)
-    for msg in st.session_state.messages
-):
-    st.markdown("""
-    <div style="
-        text-align:center;
-        padding: 10px 0 25px;
-        color:#cbd5e1;
-    ">
-        <div style="font-size:19px;font-weight:600;">
-            Hey there! 👋
-        </div>
-        <div style="font-size:14px;color:#94a3b8;margin-top:7px;">
-            What's on your mind today?
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
 # ---- Display conversation history ----
 for msg in st.session_state.messages:
     if isinstance(msg, HumanMessage):
-        with st.chat_message("user", avatar="🧑‍💻"):
-            st.markdown(msg.content)
+        st.chat_message("user", avatar="🧑‍💻").write(msg.content)
 
     elif isinstance(msg, AIMessage):
-        with st.chat_message("assistant", avatar="✦"):
-            st.markdown(msg.content)
+        st.chat_message("assistant", avatar="👑").write(msg.content)
+
+# ---- Chat input ----
+prompt = st.chat_input("Type your message...")
+
 
 # ---- Stream Groq response ----
 def stream_chunks():
@@ -197,18 +137,16 @@ def stream_chunks():
                     if block.get("type") == "text" and block.get("text"):
                         yield block["text"]
 
-# ---- Chat input ----
-prompt = st.chat_input("Message ChatDynast...")
 
+# ---- Handle user message ----
 if prompt:
     st.session_state.messages.append(
         HumanMessage(content=prompt)
     )
 
-    with st.chat_message("user", avatar="🧑‍💻"):
-        st.markdown(prompt)
+    st.chat_message("user", avatar="🧑‍💻").write(prompt)
 
-    with st.chat_message("assistant", avatar="✦"):
+    with st.chat_message("assistant", avatar="👑"):
         try:
             reply_text = st.write_stream(stream_chunks())
 
@@ -217,11 +155,12 @@ if prompt:
                     AIMessage(content=reply_text)
                 )
             else:
-                st.warning("The AI returned an empty response.")
+                st.warning("Groq returned an empty response.")
 
         except Exception as e:
             print(f"Groq error: {type(e).__name__}: {e}")
 
+            # Remove only the failed user message
             if (
                 st.session_state.messages
                 and isinstance(st.session_state.messages[-1], HumanMessage)
@@ -230,13 +169,7 @@ if prompt:
                 st.session_state.messages.pop()
 
             st.error(
-                "Oops! ChatDynast couldn't connect right now. "
-                "Please try again in a moment."
+                "ChatDynast couldn't get a response from Groq. "
+                "Please check your API key, model availability, "
+                "rate limits, and app logs."
             )
-
-# ---- Footer ----
-st.markdown("""
-<div class="footer">
-    ChatDynast ✦ Powered by Groq · Made by Shahriar Shoaib
-</div>
-""", unsafe_allow_html=True)
