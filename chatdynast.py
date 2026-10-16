@@ -72,9 +72,37 @@ st.markdown(
         backdrop-filter: blur(6px);
     }
 
+    /* Make all chat text bright and clear */
+    [data-testid="stChatMessage"] p,
+    [data-testid="stChatMessage"] li,
+    [data-testid="stChatMessage"] span,
+    [data-testid="stChatMessage"] div,
+    [data-testid="stChatMessage"] code {
+        color: #f5f5ff !important;
+        font-size: 1.05rem;
+        line-height: 1.65;
+    }
+
+    /* Dark bottom bar */
+    [data-testid="stBottom"],
+    [data-testid="stBottom"] > div,
+    [data-testid="stBottomBlockContainer"] {
+        background: transparent !important;
+    }
+
     /* Chat input */
-    [data-testid="stChatInput"] textarea {
+    [data-testid="stChatInput"] {
+        background: #1f1f3d !important;
+        border: 1px solid #6d4fd8 !important;
         border-radius: 14px;
+    }
+    [data-testid="stChatInput"] textarea {
+        background: #1f1f3d !important;
+        color: #ffffff !important;
+        border-radius: 14px;
+    }
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: #b8b8d6 !important;
     }
     </style>
     """,
