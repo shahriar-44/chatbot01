@@ -1,27 +1,27 @@
+
 import streamlit as st
-from dotenv import load_dotenv
-
-load_dotenv()
-
 from langchain_groq import ChatGroq
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
-# ---- Model setup (runs once per session) ----
+# ---- App configuration ----
+st.title("ChatDynast")
+st.caption("Founded by Shahriar Shoaib")
+
+# ---- Model setup ----
 if "model" not in st.session_state:
     st.session_state.model = ChatGroq(
         model="openai/gpt-oss-120b",
-        temperature=0.7
+        temperature=0.7,
+        max_retries=2,
     )
 
 # ---- Chat memory ----
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        SystemMessage(content="You're a sexy and Funny AI Agent.")
+        SystemMessage(
+            content="You're a sexy and Funny AI Agent."
+        )
     ]
-
-# ---- App title ----
-st.title("ChatDynast")
-st.caption("Founded by Shahriar Shoaib")
 
 # ---- Display conversation history ----
 for msg in st.session_state.messages:
@@ -40,12 +40,14 @@ def stream_chunks():
     for chunk in st.session_state.model.stream(
         st.session_state.messages
     ):
-        if isinstance(chunk.content, str):
-            if chunk.content:
-                yield chunk.content
+        content = chunk.content
 
-        elif isinstance(chunk.content, list):
-            for block in chunk.content:
+        if isinstance(content, str):
+            if content:
+                yield content
+
+        elif isinstance(content, list):
+            for block in content:
                 if isinstance(block, dict):
                     if block.get("type") == "text" and block.get("text"):
                         yield block["text"]
@@ -73,6 +75,7 @@ if prompt:
         except Exception as e:
             print(f"Groq error: {type(e).__name__}: {e}")
 
+            # Remove only the failed user message
             if (
                 st.session_state.messages
                 and isinstance(st.session_state.messages[-1], HumanMessage)
@@ -81,7 +84,7 @@ if prompt:
                 st.session_state.messages.pop()
 
             st.error(
-                "Sorry, ChatDynast couldn't get a response from Groq. "
-                "Please try again. Check your API key, model availability, "
-                "rate limits, and app logs if the problem continues."
+                "ChatDynast couldn't get a response from Groq. "
+                "Please check your API key, model availability, "
+                "rate limits, and app logs."
             )
