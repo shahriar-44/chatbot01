@@ -94,12 +94,27 @@ st.markdown(
     [data-testid="stChatInput"] {
         background: #1f1f3d !important;
         border: 1px solid #6d4fd8 !important;
-        border-radius: 14px;
+        border-radius: 16px !important;
+    }
+    [data-testid="stChatInput"] > div,
+    [data-testid="stChatInput"] div[data-baseweb="textarea"],
+    [data-testid="stChatInput"] div[data-baseweb="base-input"] {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
     [data-testid="stChatInput"] textarea {
-        background: #1f1f3d !important;
+        background: transparent !important;
         color: #ffffff !important;
-        border-radius: 14px;
+        border-radius: 0 !important;
+    }
+    [data-testid="stChatInputSubmitButton"] {
+        background: #6d4fd8 !important;
+        color: #ffffff !important;
+        border-radius: 10px !important;
+    }
+    [data-testid="stChatInputSubmitButton"] svg {
+        color: #ffffff !important;
     }
     [data-testid="stChatInput"] textarea::placeholder {
         color: #b8b8d6 !important;
