@@ -1,3 +1,4 @@
+
 import os
 from datetime import date
 import streamlit as st
@@ -6,7 +7,7 @@ from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
 
 # ---- Page configuration (must be the first Streamlit command) ----
 st.set_page_config(
-    page_title="ChatDynast",
+    page_title="Heylyvo",
     page_icon="🪶",
     layout="centered",
 )
@@ -156,8 +157,8 @@ st.markdown(
 )
 
 # ---- Usage limits (protects your free API key) ----
-FREE_MESSAGES = 3      # free messages per visitor
-DAILY_CAP = 200        # total free messages for ALL visitors per day
+FREE_MESSAGES = 3
+DAILY_CAP = 200
 
 
 def get_access_code():
@@ -195,12 +196,18 @@ def unlock_form():
 
 
 # ---- Header ----
-st.markdown('<h1 class="dynast-title">🪶 ChatDynast</h1>', unsafe_allow_html=True)
+st.markdown(
+    '<h1 class="dynast-title">🪶 Heylyvo</h1>',
+    unsafe_allow_html=True,
+)
 st.markdown(
     '<p class="dynast-founder">Founded by <span class="name">Shahriar Shoaib</span></p>',
     unsafe_allow_html=True,
 )
-st.markdown('<div class="dynast-divider"></div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="dynast-divider"></div>',
+    unsafe_allow_html=True,
+)
 
 # ---- Model setup ----
 if "model" not in st.session_state:
@@ -219,8 +226,8 @@ if "messages" not in st.session_state:
     ]
 
 if "unlocked" not in st.session_state:
-    st.session_state.unlocked = False   # becomes True after a correct code
-    st.session_state.used = 0           # free messages used so far
+    st.session_state.unlocked = False
+    st.session_state.used = 0
 
 # ---- Display conversation history ----
 for msg in st.session_state.messages:
@@ -233,15 +240,25 @@ for msg in st.session_state.messages:
 # ---- Free limit check ----
 if not st.session_state.unlocked:
     if count_today()["count"] >= DAILY_CAP:
-        st.info("ChatDynast is resting for today because a lot of people used it. "
-                "Come back tomorrow! 🪶")
+        st.info(
+            "Heylyvo is resting for today because a lot of people used it. "
+            "Come back tomorrow! 🪶"
+        )
         unlock_form()
         st.stop()
+
     if st.session_state.used >= FREE_MESSAGES:
-        st.warning("You've used your free messages. Enter an access code to keep chatting.")
+        st.warning(
+            "You've used your free messages. "
+            "Enter an access code to keep chatting."
+        )
         unlock_form()
         st.stop()
-    st.caption(f"🪶 Free messages left: {FREE_MESSAGES - st.session_state.used}")
+
+    st.caption(
+        f"🪶 Free messages left: "
+        f"{FREE_MESSAGES - st.session_state.used}"
+    )
 
 # ---- Chat input ----
 prompt = st.chat_input("Type your message...")
@@ -281,6 +298,7 @@ if prompt:
                 st.session_state.messages.append(
                     AIMessage(content=reply_text)
                 )
+
                 if not st.session_state.unlocked:
                     st.session_state.used += 1
                     count_today()["count"] += 1
@@ -299,7 +317,7 @@ if prompt:
                 st.session_state.messages.pop()
 
             st.error(
-                "ChatDynast couldn't get a response from Groq. "
+                "Heylyvo couldn't get a response from Groq. "
                 "Please check your API key, model availability, "
                 "rate limits, and app logs."
             )
