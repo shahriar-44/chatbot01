@@ -1,3 +1,5 @@
+import os
+from datetime import date
 import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_core.messages import AIMessage, SystemMessage, HumanMessage
@@ -83,6 +85,35 @@ st.markdown(
         line-height: 1.65;
     }
 
+    /* Access code form + alerts */
+    [data-testid="stForm"] {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+    }
+    [data-testid="stForm"] label p,
+    [data-testid="stAlert"] *,
+    [data-testid="stCaptionContainer"] * {
+        color: #f5f5ff !important;
+    }
+    [data-testid="stAlert"] {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 14px;
+    }
+    [data-testid="stTextInput"] input {
+        background: #1f1f3d !important;
+        color: #ffffff !important;
+        border: 1px solid #6d4fd8 !important;
+    }
+    [data-testid="stFormSubmitButton"] button {
+        background: linear-gradient(90deg, #8b5cf6, #38bdf8);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+    }
+
     /* Dark bottom bar */
     [data-testid="stBottom"],
     [data-testid="stBottom"] > div,
@@ -124,6 +155,45 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# ---- Usage limits (protects your free API key) ----
+FREE_MESSAGES = 3      # free messages per visitor
+DAILY_CAP = 200        # total free messages for ALL visitors per day
+
+
+def get_access_code():
+    """Reads ACCESS_CODE from Streamlit secrets or your .env / environment."""
+    try:
+        return st.secrets["ACCESS_CODE"]
+    except Exception:
+        return os.getenv("ACCESS_CODE", "")
+
+
+@st.cache_resource
+def _usage():
+    return {"day": date.today(), "count": 0}
+
+
+def count_today():
+    """One shared counter for everyone. Resets every new day."""
+    usage = _usage()
+    if usage["day"] != date.today():
+        usage["day"] = date.today()
+        usage["count"] = 0
+    return usage
+
+
+def unlock_form():
+    with st.form("unlock_form"):
+        code = st.text_input("Access code", type="password")
+        if st.form_submit_button("Unlock"):
+            real = get_access_code()
+            if real and code.strip() == real:
+                st.session_state.unlocked = True
+                st.rerun()
+            else:
+                st.error("Wrong code. Try again.")
+
+
 # ---- Header ----
 st.markdown('<h1 class="dynast-title">🪶 ChatDynast</h1>', unsafe_allow_html=True)
 st.markdown(
@@ -148,6 +218,10 @@ if "messages" not in st.session_state:
         )
     ]
 
+if "unlocked" not in st.session_state:
+    st.session_state.unlocked = False   # becomes True after a correct code
+    st.session_state.used = 0           # free messages used so far
+
 # ---- Display conversation history ----
 for msg in st.session_state.messages:
     if isinstance(msg, HumanMessage):
@@ -155,6 +229,19 @@ for msg in st.session_state.messages:
 
     elif isinstance(msg, AIMessage):
         st.chat_message("assistant", avatar="🪶").write(msg.content)
+
+# ---- Free limit check ----
+if not st.session_state.unlocked:
+    if count_today()["count"] >= DAILY_CAP:
+        st.info("ChatDynast is resting for today because a lot of people used it. "
+                "Come back tomorrow! 🪶")
+        unlock_form()
+        st.stop()
+    if st.session_state.used >= FREE_MESSAGES:
+        st.warning("You've used your free messages. Enter an access code to keep chatting.")
+        unlock_form()
+        st.stop()
+    st.caption(f"🪶 Free messages left: {FREE_MESSAGES - st.session_state.used}")
 
 # ---- Chat input ----
 prompt = st.chat_input("Type your message...")
@@ -194,6 +281,9 @@ if prompt:
                 st.session_state.messages.append(
                     AIMessage(content=reply_text)
                 )
+                if not st.session_state.unlocked:
+                    st.session_state.used += 1
+                    count_today()["count"] += 1
             else:
                 st.warning("Groq returned an empty response.")
 
